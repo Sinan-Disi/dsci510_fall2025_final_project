@@ -1,6 +1,10 @@
 numpy
 pandas
 scikit-learn
-kaggle
+matplotlib
+seaborn
+requests
 kagglehub
 python-dotenv
+kaggle
+beautifulsoup4
