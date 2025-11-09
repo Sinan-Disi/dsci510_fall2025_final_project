@@ -8,3 +8,4 @@ kagglehub
 python-dotenv
 kaggle
 beautifulsoup4
+RAWG Video Games Database API
