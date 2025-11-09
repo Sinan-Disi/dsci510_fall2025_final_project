@@ -1,0 +1,28 @@
+# --- secrets ---
+**/.env
+!**/.env.example
+kaggle.json
+*.key
+*.pem
+
+# --- data & outputs ---
+data/**
+results/**
+
+# --- Python cache/bytecode ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Environments ---
+.venv/
+venv/
+
+# --- Editors / OS junk ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
