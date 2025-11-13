@@ -38,6 +38,7 @@ pip install -r requirements.txt
 Python packages:
 pandas, numpy, matplotlib, seaborn, scikit-learn, python-dotenv, requests, kaggle
 
+Note: data/ and results/ are created on run and are git-ignored by design.
 # Running analysis 
 
 Open src/results.ipynb and Run All. (Creates data/ and results/ locally.)

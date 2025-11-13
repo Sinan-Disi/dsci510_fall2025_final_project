@@ -4,9 +4,6 @@ scikit-learn
 matplotlib
 seaborn
 requests
-kagglehub
-python-dotenv
-kaggle
 python-dotenv
 kaggle
 notebook
