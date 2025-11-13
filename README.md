@@ -1,6 +1,6 @@
-# Sample Project - <Analyzing & Predicting Video Game Ratings (Steam Positive Rating Ratio)>
+# Sample Project - Analyzing & Predicting Video Game Ratings (Steam Positive Rating Ratio)
 
-Exploratory analysis of video-game data (2000–2020) and a simple regression model to predict Steam’s positive rating ratio. Sources: RAWG API, Steam (Kaggle), VGSales (Kaggle). Figures are produced by main.py and can be displayed in results folder.
+Exploratory analysis of video-game data (2000–2020) and a simple regression model to predict Steam’s positive rating ratio. Sources: RAWG API, Steam (Kaggle), VGSales (Kaggle). Figures are produced by main.py and are saved to the results/ folder (not committed to Git).
 
 # Data sources
 1) RAWG API — game title, released date, rating, platforms, genres (sampled to 10,000 rows; saved as data/rawg_10000_unfiltered.csv).
@@ -31,20 +31,21 @@ Cleaning & standardization (shared):
 7) Prediction model: Linear Regression to predict pos_ratio using price, average_playtime, owners_mid, primary genre_std, platforms, and year. Numeric features standardized; categoricals label-encoded. Expected low R² due to noisy user ratings; coefficients reported and visualized.
 
 # Installation
-Set environment variables/keys:
-.env with RAWG_API_KEY=your_key_here
-Place kaggle.json in the project root; the data-collection notebook copies it to ~/.kaggle/kaggle.json
+Copy src/.env.example to .env and set: RAWG_API_KEY=YOUR_RAWG_KEY_HERE
+Place kaggle.json in the project root (or set KAGGLE_USERNAME and KAGGLE_KEY env vars).
+pip install -r requirements.txt
+
 Python packages:
 pandas, numpy, matplotlib, seaborn, scikit-learn, python-dotenv, requests, kaggle
 
 # Running analysis 
 
-From `src/` directory run:
-
-`python main.py `
+Open src/results.ipynb and Run All. (Creates data/ and results/ locally.)
 
 Results will appear in `results/` folder. All obtained will be stored in `data/`
 
+# Tests
+python src/tests.py  
 
 # Notes and Limitations
 1) Genre standardization is a compact mapping for an intro course. Some nuanced sub-genres are bucketed into misc.
