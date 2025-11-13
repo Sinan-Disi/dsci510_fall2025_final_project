@@ -1,21 +1,21 @@
 # --- secrets ---
 **/.env
 !**/.env.example
-kaggle.json
+**/kaggle.json
 *.key
 *.pem
 
 # --- data & outputs ---
-data/**
-results/**
+data/
+results/
 
 # --- Python cache/bytecode ---
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
 # --- Notebooks ---
-.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
 # --- Environments ---
 .venv/
@@ -25,6 +25,8 @@ venv/
 .vscode/
 .idea/
 .DS_Store
-Thumbs.dbsrc/*.ipynb
+Thumbs.db
+
+# --- Notebooks inside src ---
 src/*.ipynb
 !src/results.ipynb
