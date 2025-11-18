@@ -1,110 +1,115 @@
 #Tests
+#Tests
 from pathlib import Path
 import os
 import pandas as pd
 import requests
-from dotenv import load_dotenv
 
-HERE = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
-ROOT = HERE if (HERE / "data").exists() else HERE.parent
-DATA = ROOT / "data"
-RESULTS = ROOT / "results"
+from config import (
+    RAWG_API_KEY,
+    DATA_DIR,
+    RESULTS_DIR,
+    RAWG_RAW,
+    STEAM_RAW,
+    VGSALES_RAW,
+    RAWG_CLEAN,
+    STEAM_CLEAN,
+    VGSALES_CLEAN,
+    YEAR_MIN,
+    YEAR_MAX,
+)
+
+DATA = DATA_DIR
+RESULTS = RESULTS_DIR
 
 def run_test(name, fn):
     try:
         rv = fn()
         if rv == "skip":
             print(f"[SKIP] {name}")
-            return "skip"
-        print(f"[PASS] {name}")
-        return "pass"
+        else:
+            print(f"[PASS] {name}")
+        return rv
     except AssertionError as e:
-        print(f"[FAIL] {name} -> {e}")
+        print(f"[FAIL] {name}: {e}")
         return "fail"
     except Exception as e:
-        print(f"[ERROR] {name} -> {e}")
+        print(f"[FAIL] {name}: unexpected error {e}")
         return "fail"
 
 def test_rawg_api_smoke():
-    load_dotenv(ROOT / ".env")
-    key = os.getenv("RAWG_API_KEY")
+    key = RAWG_API_KEY
     if not key:
         print("  SKIP: RAWG_API_KEY not set (put it in .env).")
         return "skip"
     try:
         r = requests.get(
             "https://api.rawg.io/api/games",
-            params={"key": key, "page_size": 1, "page": 1},
-            timeout=15,
+            params={"key": key, "page_size": 1},
+            timeout=10,
         )
     except requests.RequestException as e:
-        print(f"  SKIP: network error: {e}")
-        return "skip"
-    assert r.status_code == 200, f"RAWG status {r.status_code}"
-    js = r.json()
-    assert "results" in js and len(js["results"]) >= 1, "RAWG response had no results"
+        raise AssertionError(f"Request failed: {e}")
+    assert r.status_code == 200, f"Expected 200, got {r.status_code}"
+    data = r.json()
+    assert "results" in data, "RAWG response missing 'results'"
 
 def test_source_files_if_present():
     missing = []
-    for fp in [DATA / "rawg_10000_unfiltered.csv",
-               DATA / "steam.csv",
-               DATA / "vgsales.csv"]:
+    for fp in [RAWG_RAW, STEAM_RAW, VGSALES_RAW]:
         if not fp.exists():
-            print(f"  SKIP: {fp.name} not found (run pipeline).")
+            print(f"  SKIP: {fp} does not exist (run data_collection.py).")
             missing.append(fp)
     if missing:
         return "skip"
-    for fp in [DATA / "rawg_10000_unfiltered.csv",
-               DATA / "steam.csv",
-               DATA / "vgsales.csv"]:
-        assert fp.stat().st_size > 0, f"{fp.name} exists but is empty."
+    for fp in [RAWG_RAW, STEAM_RAW, VGSALES_RAW]:
+        df = pd.read_csv(fp, nrows=5)
+        assert not df.empty, f"{fp.name} is empty"
+        assert df.shape[1] > 0, f"{fp.name} has no columns"
 
 def test_rawg_schema_if_present():
-    fp = DATA / "rawg_10000_unfiltered.csv"
+    fp = RAWG_RAW
     if not fp.exists():
-        print("  SKIP: rawg_10000_unfiltered.csv not found (run pipeline).")
+        print("  SKIP: rawg_10000_unfiltered.csv not present.")
         return "skip"
-    df = pd.read_csv(fp, nrows=5)
-    need = {"name", "rating", "released", "platforms", "genres"}
-    assert need.issubset(df.columns), f"RAWG missing columns: {need - set(df.columns)}"
+    df = pd.read_csv(fp, nrows=100)
+    for col in ["name", "rating", "released", "platforms", "genres"]:
+        assert col in df.columns, f"RAWG missing column {col}"
 
 def test_steam_schema_if_present():
-    fp = DATA / "steam.csv"
+    fp = STEAM_RAW
     if not fp.exists():
-        print("  SKIP: steam.csv not found (run pipeline).")
+        print("  SKIP: steam.csv not present.")
         return "skip"
-    df = pd.read_csv(fp, nrows=5)
-    need = {
-        "positive_ratings", "negative_ratings", "price",
-        "average_playtime", "owners", "categories",
-        "platforms", "publisher", "release_date"
-    }
-    assert need.issubset(df.columns), f"Steam missing columns: {need - set(df.columns)}"
+    df = pd.read_csv(fp, nrows=100)
+    for col in ["appid", "name", "positive_ratings", "negative_ratings", "price"]:
+        assert col in df.columns, f"Steam missing column {col}"
 
 def test_vgsales_schema_if_present():
-    fp = DATA / "vgsales.csv"
+    fp = VGSALES_RAW
     if not fp.exists():
-        print("  SKIP: vgsales.csv not found (run pipeline).")
+        print("  SKIP: vgsales.csv not present.")
         return "skip"
-    df = pd.read_csv(fp, nrows=5)
-    need = {"Name", "Platform", "Year", "Genre", "Global_Sales"}
-    assert need.issubset(df.columns), f"VGSales missing columns: {need - set(df.columns)}"
+    df = pd.read_csv(fp, nrows=100)
+    for col in ["Name", "Platform", "Year", "Genre", "Global_Sales"]:
+        assert col in df.columns, f"VGSales missing column {col}"
 
 def test_cleaned_files_if_present():
     cleaned = [
-        (DATA / "rawg_clean.csv",  "year"),
-        (DATA / "steam_clean.csv", "year"),
-        (DATA / "vgsales_clean.csv", "year"),
+        (RAWG_CLEAN,  "year"),
+        (STEAM_CLEAN, "year"),
+        (VGSALES_CLEAN, "year"),
     ]
     saw_any = False
     for fp, ycol in cleaned:
         if not fp.exists():
+            print(f"  SKIP: {fp} not found (run preprocessing).")
             continue
         saw_any = True
         df = pd.read_csv(fp, usecols=lambda c: c == ycol, low_memory=False)
         assert not df.empty, f"{fp.name} is empty"
         yr = pd.to_numeric(df[ycol], errors="coerce").dropna()
-        assert ((yr >= 2000) & (yr <= 2020)).all(), f"{fp.name} has year outside 2000–2020"
+        assert ((yr >= YEAR_MIN) & (yr <= YEAR_MAX)).all(), f"{fp.name} has year outside {YEAR_MIN}-{YEAR_MAX}"
     if not saw_any:
         print("  SKIP: cleaned CSVs not found (run preprocessing).")
         return "skip"

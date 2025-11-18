@@ -1,15 +1,30 @@
-#Collecting Raw RAWG Data by API  
+#!/usr/bin/env python
+# coding: utf-8
 
+# In[1]:
+
+
+#Collecting Raw RAWG Data by API  
 import os
 import time
 import random
 import requests
 import pandas as pd
-from dotenv import load_dotenv
 
-load_dotenv()
+from config import (
+    RAWG_API_KEY,
+    DATA_DIR,
+    RAWG_RAW,
+    STEAM_RAW,
+    VGSALES_RAW,
+    RAWG_TARGET_TOTAL,
+    RAWG_PAGE_LIMIT,
+    RAWG_PAGE_SIZE,
+    RAWG_SLEEP_SEC,
+    ensure_kaggle_creds,
+)
 
-API_KEY = os.getenv("RAWG_API_KEY")
+API_KEY = RAWG_API_KEY
 if not API_KEY:
     raise RuntimeError(
         "RAWG_API_KEY not found. Create a .env file in your project root with:\n"
@@ -19,7 +34,7 @@ if not API_KEY:
 print("API key loaded:", bool(API_KEY))
 
 games = []
-target_total = 10_000  
+target_total = RAWG_TARGET_TOTAL
 print("Starting RAWG data collection (unfiltered)…\n")
 
 session = requests.Session()
@@ -27,47 +42,50 @@ BASE = "https://api.rawg.io/api/games"
 
 collected = 0
 attempts = 0
-page_limit = 1200  
+page_limit = RAWG_PAGE_LIMIT
 seen_ids = set()
 
 while collected < target_total and attempts < 5000:
     page = random.randint(1, page_limit)
     params = {
         "key": API_KEY,
-        "page_size": 100,   
-        "page": page,       
+        "page_size": RAWG_PAGE_SIZE,
+        "page": page,
     }
 
     try:
         r = session.get(BASE, params=params, timeout=20)
-    except requests.RequestException:
-        attempts += 1
+    except requests.RequestException as e:
+        print(f"Request failed: {e}. Sleeping and retrying...")
         time.sleep(1)
         continue
 
     attempts += 1
     if r.status_code != 200:
-        print(f"  Skipped page {page} (error {r.status_code})")
+        print(f"Non-200 status {r.status_code}. Body: {r.text[:200]}")
         time.sleep(1)
         continue
 
-    data = r.json().get("results", [])
-    if not data:
-        time.sleep(0.5)
+    data = r.json()
+    results = data.get("results") or []
+    if not results:
+        print("No results on this page, skipping...")
+        time.sleep(1)
         continue
 
-    for g in data:
+    for g in results:
         gid = g.get("id")
         if gid in seen_ids:
             continue
         seen_ids.add(gid)
 
-        platforms = g.get("platforms") or []
+        platforms_list = g.get("platforms") or []
         platform_names = ", ".join(
             p["platform"]["name"]
-            for p in platforms
+            for p in platforms_list
             if p and p.get("platform") and p["platform"].get("name")
         )
+
         genres_list = g.get("genres") or []
         genre_names = ", ".join(
             p.get("name", "")
@@ -88,46 +106,26 @@ while collected < target_total and attempts < 5000:
 
     if collected % 500 == 0:
         print(f"  {collected} games collected so far")
-    time.sleep(1)
+    time.sleep(RAWG_SLEEP_SEC)
 
 df = pd.DataFrame(games)
 
 print("\nCollection complete.")
 print("Total collected:", len(df))
 
-project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
-data_dir = os.path.join(project_root, "data")
-os.makedirs(data_dir, exist_ok=True)
-
-out_path = os.path.join(data_dir, "rawg_10000_unfiltered.csv")
+# use config paths
+out_path = RAWG_RAW
 df.to_csv(out_path, index=False)
 print("Saved dataset:", out_path)
 
 
 
 #Collecting Raw Steam Data by API   & Collecting Raw Data Sales data by API
-import os
 import shutil
 from kaggle import api
-import pandas as pd
 
-project_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
-data_dir = os.path.join(project_root, "data")
-os.makedirs(data_dir, exist_ok=True)
-
-home = os.path.expanduser("~")
-kaggle_dir = os.path.join(home, ".kaggle")
-os.makedirs(kaggle_dir, exist_ok=True)
-
-src_cfg = "kaggle.json"
-dst_cfg = os.path.join(kaggle_dir, "kaggle.json")
-if os.path.exists(src_cfg):
-    shutil.copyfile(src_cfg, dst_cfg)
-try:
-    if os.name == "posix":
-        os.chmod(dst_cfg, 0o600)
-except Exception:
-    pass
+# ensure Kaggle credentials are available (env vars or kaggle.json in project root)
+ensure_kaggle_creds()
 
 def fetch_kaggle_dataset(dataset_slug: str, dest_map: dict):
     tmp = f"_tmp_{dataset_slug.split('/')[-1]}"
@@ -149,25 +147,36 @@ def fetch_kaggle_dataset(dataset_slug: str, dest_map: dict):
 
 fetch_kaggle_dataset(
     "nikdavis/steam-store-games",
-    dest_map={"steam.csv": os.path.join(data_dir, "steam.csv")}
+    dest_map={"steam.csv": str(STEAM_RAW)}
 )
 
 fetch_kaggle_dataset(
     "gregorut/videogamesales",
-    dest_map={"vgsales.csv": os.path.join(data_dir, "vgsales.csv")}
+    dest_map={"vgsales.csv": str(VGSALES_RAW)}
 )
 
-steam = pd.read_csv(os.path.join(data_dir, "steam.csv"))
-sales = pd.read_csv(os.path.join(data_dir, "vgsales.csv"))
-
-
-
+steam = pd.read_csv(STEAM_RAW)
+sales = pd.read_csv(VGSALES_RAW)
 
 print("steam.csv shape:", steam.shape)
 print("vgsales.csv shape:", sales.shape)
 print("steam columns (first 15):", list(steam.columns)[:15])
 print("vgsales columns:", list(sales.columns))
 
+
+# In[2]:
+
+
+get_ipython().system('jupyter nbconvert --to script data_collection.ipynb')
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
 
