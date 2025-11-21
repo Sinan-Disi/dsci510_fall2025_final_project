@@ -131,9 +131,9 @@ def main() -> None:
     )
 
     # Year handling and filtering by YEAR_MIN..YEAR_MAX
-    rawg = add_year(rawg, "released")   # RAWG has "released"
-    steam = add_year(steam, "released")  # we renamed release_date -> released
-    sales = add_year(sales, None)        # already has "year" from rename
+    rawg = add_year(rawg, "released")   
+    steam = add_year(steam, "released")  
+    sales = add_year(sales, None)        
 
     rawg = in_window(rawg)
     steam = in_window(steam)
@@ -144,7 +144,7 @@ def main() -> None:
         {"rawg": rawg.shape, "steam": steam.shape, "sales": sales.shape},
     )
 
-    # Steam specific filters to keep only reasonably active games
+    # Steam specific filters to keep only active games
     steam = steam[
         (steam["positive_ratings"] > 0)
         & (steam["negative_ratings"] > 0)
