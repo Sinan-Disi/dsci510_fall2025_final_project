@@ -38,13 +38,13 @@ General Rules:
 All cleaned datasets are used by src/main.py.
 
 # Analysis Results (Q1–Q6)
-1) Q1 – RAWG: Most Common Genres  
+1) Q1 – RAWG: Average rating by genre  
     Titles are exploded by canonical genre.  
-    Top genres include action, adventure, shooter, strategy, simulation.
+    Top genres include shooter, puzzle, adventure, roleplaying
 
 2) Q2 – RAWG: Average Rating by Platform  
     Rating distribution across PC / PlayStation / Xbox / Switch.  
-    PlayStation and Switch tend to score slightly higher on average in this sample.
+    PC tend to score slightly less on average in this sample.
 
 3) Q3 – Steam: Review Ratio by Price Range  
     Price bins: Free, $0–5, $5–15, $15–30, $30–60  
@@ -58,35 +58,16 @@ All cleaned datasets are used by src/main.py.
     Using threshold pos_ratio ≥ 0.75 and ≥25 reviews.  
     Peak years appear around 2015–2017.
 
-6) Q6 – (Steam × VGSales): Avg positive_rating_ratio by genre_std vs avg global sales by genre_std; shows a weak or negative correlation.
+6) Q6 – (Steam × VGSales): Avg positive_rating_ratio by genre_std vs avg global sales by genre_std; shows a weak negative correlation.
 
 # Prediction Model (Q7)
-A Ridge Linear Regression (L2-regularization) model predicts Steam positive rating ratio using:
-
-Numeric / Engineered Features:
-    log_price  
-    is_free  
-    log_owners_mid  
-    log_total_ratings  
-    year  
-    median_playtime  
-
-Categorical / Embedded Features:
-    K-Means genre cluster (5 clusters)  
-    Price-bin dummies (price_0_5, price_5_15, ...)
-
-Notes:
-    Features are standardized via StandardScaler.  
-    GridSearchCV selects optimal alpha.  
-    Expected R² remains modest due to the noisy, user-driven nature of Steam reviews.
-
-Outputs include:
-    Best alpha  
-    Train/validation R²  
-    Test R² and RMSE  
-    Coefficient importance plot  
-
-Saved to: results/q7_ridge_coefficients.png
+Built a Ridge Regression model to predict pos_ratio using engineered Steam features.
+Features include: log_price, is_free, log_owners_mid, log_total_ratings, year, median_playtime, genre_cluster, and price-bin dummies.
+Best alpha (via GridSearchCV): 10
+Performance: CV R² ≈ 0.22, Test R² ≈ 0.26, Test RMSE ≈ 0.15
+Most important predictors: log_total_ratings, log_owners_mid, and price-bin effects.
+Genre cluster and playtime had smaller influence.
+Coefficient bar chart saved as: results/q7_ridge_coefficients.png
 
 # Installation
 * Install required packages: pip install -r requirements.txt

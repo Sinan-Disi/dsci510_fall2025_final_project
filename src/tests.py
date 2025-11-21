@@ -1,5 +1,5 @@
-#Tests
-#Tests
+"""Lightweight smoke tests for the Video-Game Analytics & Prediction project."""
+
 from pathlib import Path
 import os
 import pandas as pd
@@ -23,6 +23,7 @@ DATA = DATA_DIR
 RESULTS = RESULTS_DIR
 
 def run_test(name, fn):
+    """Run a single test function and print a PASS/FAIL/SKIP line."""
     try:
         rv = fn()
         if rv == "skip":
