@@ -28,9 +28,10 @@ def run_test(name, fn):
         rv = fn()
         if rv == "skip":
             print(f"[SKIP] {name}")
+            return "skip"
         else:
             print(f"[PASS] {name}")
-        return rv
+            return "pass"
     except AssertionError as e:
         print(f"[FAIL] {name}: {e}")
         return "fail"
