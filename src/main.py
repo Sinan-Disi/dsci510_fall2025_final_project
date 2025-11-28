@@ -496,7 +496,7 @@ def main():
     # Coefficients for each feature (used for interpretation)
     coef_raw = pd.Series(best_model.coef_, index=num_cols)
 
-    # Friendly names for the main features in the coefficient plot
+    # Friendly names for the main features in the coefficient plot (for the presentation)
     pretty_names = {
         "log_total_ratings": "Total ratings (log)",
         "log_owners_mid": "Owners (log)",
