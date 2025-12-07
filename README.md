@@ -101,6 +101,7 @@ Coefficient bar chart saved as: results/q7_ridge_coefficients.png
     * data/, results/, .env, kaggle.json are git-ignored.
 
 # Running the project
+# Option 1:
 1) Open src/results.ipynb  
 2) Click **Run All** to execute the full workflow:
        Loads cleaned datasets  
@@ -110,6 +111,12 @@ Coefficient bar chart saved as: results/q7_ridge_coefficients.png
        Stores cleaned datasets in data/
 
 3) You do not need to run data_collection.py, preprocessing.py, or main.py unless you want to regenerate raw/cleaned datasets manually.
+   
+# Option 2:
+Run the entire workflow from a single script:
+cd src
+python start.py
+This collects data, cleans it, and runs the full analysis (Q1–Q7) automatically.
 
 # Tests
 To run the tests:
